@@ -129,7 +129,7 @@ void MainWindow::on_actionAbout_triggered()
 {
     QMessageBox::about(this,
                        QString("tPATH"),
-                       QString("Better view for Environment.\nVer.%1\n\n-----").arg(QCoreApplication::applicationVersion()));
+                       QString("Better view for Environment.\n\n-----\nVer.%1\nopensource - MIT\nAuthor: ruxia-TJY").arg(QCoreApplication::applicationVersion()));
 }
 MainWindow::~MainWindow()
 {
