@@ -31,9 +31,18 @@
      <number>3</number>
     </property>
     <item row="0" column="0">
-     <widget class="QTreeWidget" name="tW_Env"/>
+     <widget class="QTreeWidget" name="tW_Env">
+      <column>
+       <property name="text">
+        <string notr="true">1</string>
+       </property>
+      </column>
+     </widget>
     </item>
-    <item row="1" column="0">
+    <item row="0" column="1">
+     <widget class="QListWidget" name="lW_Value"/>
+    </item>
+    <item row="1" column="0" colspan="2">
      <widget class="QFrame" name="frame_search">
       <property name="frameShape">
        <enum>QFrame::StyledPanel</enum>
@@ -81,9 +90,6 @@
        </item>
       </layout>
      </widget>
-    </item>
-    <item row="0" column="1">
-     <widget class="QListWidget" name="lW_Value"/>
     </item>
    </layout>
   </widget>
@@ -185,6 +191,12 @@
    </property>
   </action>
  </widget>
+ <tabstops>
+  <tabstop>lE_search</tabstop>
+  <tabstop>cB_SearchMode</tabstop>
+  <tabstop>tW_Env</tabstop>
+  <tabstop>lW_Value</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>
