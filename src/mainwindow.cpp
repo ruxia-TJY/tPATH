@@ -120,8 +120,12 @@ void MainWindow::onSearch()
 void MainWindow::tW_Env_currentItemChanged(QTreeWidgetItem *currentItem,QTreeWidgetItem *pre)
 {
     ui->lW_Value->clear();
-
+#ifdef Q_OS_WIN
+    QStringList lst = currentItem->text(1).split(";");
+#elif defined(Q_OS_LINUX)
     QStringList lst = currentItem->text(1).split(":");
+#endif
+    lst.removeAll("");
     ui->lW_Value->addItems(lst);
     ui->lW_Value->setCurrentRow(0);
 
