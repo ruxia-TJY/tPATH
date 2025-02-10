@@ -5,6 +5,7 @@
 #include"QTreeWidgetItem"
 #include<QLabel>
 #include<QPushButton>
+#include<QSettings>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }

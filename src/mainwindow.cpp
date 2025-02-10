@@ -38,7 +38,6 @@ MainWindow::MainWindow(QWidget *parent)
             this,&MainWindow::viewsShow);
 
 
-
     readEnvKeyList();
 
     viewsShow();
@@ -61,6 +60,9 @@ void MainWindow::onSearch()
     int resultNums = 0;
     QString searchText = ui->lE_search->text();    
     QTreeWidgetItem* Item;
+#ifdef Q_OS_WIN
+    QTreeWidgetItem* winChildItem;
+#endif
     QTreeWidgetItem* topItem;
 
     switch (ui->cB_SearchMode->currentIndex()) {
@@ -69,6 +71,18 @@ void MainWindow::onSearch()
         for (int i = ui->tW_Env->topLevelItemCount() - 1;i >= 0; i--)
         {
             Item = ui->tW_Env->topLevelItem(i);
+#ifdef Q_OS_WIN
+            for(int j = Item->childCount() - 1;j >= 0 ;j--){
+                winChildItem = Item->child(j);
+                if(winChildItem->text(0).contains(searchText,Qt::CaseInsensitive) || winChildItem->text(1).contains(searchText,Qt::CaseInsensitive)){
+                    winChildItem->setHidden(false);
+                    topItem=winChildItem;
+                    resultNums += 1;
+                }
+                else
+                    winChildItem->setHidden(true);
+            }
+#elif defined(Q_OS_LINUX)
             if(Item->text(0).contains(searchText,Qt::CaseInsensitive) || Item->text(1).contains(searchText,Qt::CaseInsensitive)){
                 Item->setHidden(false);
                 topItem=Item;
@@ -76,6 +90,7 @@ void MainWindow::onSearch()
             }
             else
                 Item->setHidden(true);
+#endif
         }
         break;
     case 1:
@@ -83,6 +98,18 @@ void MainWindow::onSearch()
         for (int i = ui->tW_Env->topLevelItemCount() - 1;i >= 0; i--)
         {
             Item = ui->tW_Env->topLevelItem(i);
+#ifdef Q_OS_WIN
+            for(int j = Item->childCount() - 1;j >= 0 ;j--){
+                winChildItem = Item->child(j);
+                if(winChildItem->text(0).contains(searchText,Qt::CaseInsensitive)){
+                    winChildItem->setHidden(false);
+                    topItem=winChildItem;
+                    resultNums += 1;
+                }
+                else
+                    winChildItem->setHidden(true);
+            }
+#elif defined(Q_OS_LINUX)
             if(Item->text(0).contains(searchText,Qt::CaseInsensitive)){
                 Item->setHidden(false);
                 topItem=Item;
@@ -90,6 +117,7 @@ void MainWindow::onSearch()
             }
             else
                 Item->setHidden(true);
+#endif
         }
         break;
     case 2:
@@ -97,6 +125,18 @@ void MainWindow::onSearch()
         for (int i = ui->tW_Env->topLevelItemCount() - 1;i >= 0; i--)
         {
             Item = ui->tW_Env->topLevelItem(i);
+#ifdef Q_OS_WIN
+            for(int j = Item->childCount() - 1;j >= 0 ;j--){
+                winChildItem = Item->child(j);
+                if(winChildItem->text(1).contains(searchText,Qt::CaseInsensitive)){
+                    winChildItem->setHidden(false);
+                    topItem=winChildItem;
+                    resultNums += 1;
+                }
+                else
+                    winChildItem->setHidden(true);
+            }
+#elif defined(Q_OS_LINUX)
             if(Item->text(1).contains(searchText,Qt::CaseInsensitive)){
                 Item->setHidden(false);
                 topItem=Item;
@@ -104,6 +144,7 @@ void MainWindow::onSearch()
             }
             else
                 Item->setHidden(true);
+#endif
         }
         break;
     }
@@ -128,17 +169,57 @@ void MainWindow::tW_Env_currentItemChanged(QTreeWidgetItem *currentItem,QTreeWid
     lst.removeAll("");
     ui->lW_Value->addItems(lst);
     ui->lW_Value->setCurrentRow(0);
+#ifdef Q_OS_WIN
+    QString cur_count;
+    if(ui->tW_Env->currentItem()->parent() != nullptr){
+        cur_count = QString::number(ui->lW_Value->count());
+    }
+    else{
+        cur_count = QString::number(ui->tW_Env->currentItem()->childCount());
+    }
 
-    lbl_info->setText(QString("<font color=blue>%1</font> Keys,<font color=red>%2</font> is <font color=blue>%3</font>").arg(
+    lbl_info->setText(QString("User <font color=blue>%1</font> Keys,System <font color=blue>%2</font> Keys,<font color=red>%3</font> has <font color=blue>%4</font>").arg(
+        QString::number(ui->tW_Env->topLevelItem(0)->childCount()),
+        QString::number(ui->tW_Env->topLevelItem(1)->childCount()),
+        ui->tW_Env->currentItem()->text(0),
+        cur_count
+        ));
+#elif defined(Q_OS_LINUX)
+    lbl_info->setText(QString("<font color=blue>%1</font> Keys,<font color=red>%2</font> has <font color=blue>%3</font>").arg(
                           QString::number(ui->tW_Env->topLevelItemCount()),
                           ui->tW_Env->currentItem()->text(0),
                           QString::number(ui->lW_Value->count())
                           ));
+#endif
 }
 
 void MainWindow::readEnvKeyList()
 {
     ui->tW_Env->clear();
+
+#ifdef Q_OS_WIN
+    QSettings usersettings("HKEY_CURRENT_USER\\Environment", QSettings::NativeFormat);
+    QStringList userkeys = usersettings.allKeys();
+
+    QTreeWidgetItem *useritem = new QTreeWidgetItem(QStringList() << QString("User Environment") << QString(""));
+    ui->tW_Env->addTopLevelItem(useritem);
+
+    for (const QString &key : userkeys) {
+        QTreeWidgetItem *item = new QTreeWidgetItem(useritem,QStringList() << key << usersettings.value(key).toString());
+    }
+
+    QSettings systemsettings("HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment", QSettings::NativeFormat);
+    QStringList keys = systemsettings.allKeys();
+
+    QTreeWidgetItem *systemitem = new QTreeWidgetItem(QStringList() << QString("System Environment") << QString(""));
+    ui->tW_Env->addTopLevelItem(systemitem);
+
+    for (const QString &key : keys) {
+        QTreeWidgetItem *item = new QTreeWidgetItem(systemitem,QStringList() << key << systemsettings.value(key).toString());
+    }
+
+    ui->tW_Env->expandAll();
+#elif defined(Q_OS_LINUX)
     char ** env_p = environ;
 
     while(*env_p){
@@ -147,6 +228,8 @@ void MainWindow::readEnvKeyList()
         ui->tW_Env->addTopLevelItem(item);
         *env_p++;
     }
+
+#endif
 }
 
 
@@ -154,7 +237,7 @@ void MainWindow::on_actionAbout_triggered()
 {
     QMessageBox::about(this,
                        QString("tPATH"),
-                       QString("Better view for Environment.\n\n-----\nVer.%1\nopensource - MIT\nAuthor: ruxia-TJY").arg(QCoreApplication::applicationVersion()));
+                       QString("Better view for Environment.\n\n-----\nVersion.%1\nAuthor: ruxia-TJY\nLicense - MIT\nOpenSource - https://github.com/ruxia-TJY/tPATH\n\nThanks for use!").arg(QCoreApplication::applicationVersion()));
 }
 
 MainWindow::~MainWindow()
